@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>第一个three.js文件_WebGL三维场景</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      /* 隐藏body窗口区域滚动条 */
+    }
+  </style>
+  <!--引入three.js三维引擎-->
+  <script src="/js/vendor/three.js-master/build/three.min.js"></script>
+  <script src="/js/vendor/three.js-master/examples/js/controls/OrbitControls.js"></script>
+</head>
+
+<body>
+<button class="add-geometry" id="btn-add">添加</button>
+</body>
+<script>
+  // 定义常量
+  const width = window.innerWidth; // 窗口内宽度
+  const height = window.innerHeight; // 窗口内高度
+  const scene = new THREE.Scene();
+  const s = 2000; // 摄像头可视范围，值越大，范围越大
+  const l = 1; // 摄像头上下幅度，值越大，幅度越小
+  let k = width / height; // 宽高比
+  // 创建地板
+  const geometry = new THREE.PlaneGeometry(1200, 1200, 2);
+  const material = new THREE.MeshLambertMaterial({
+    color: '#27443c',
+    side: THREE.DoubleSide
+  })
+  const mesh = new THREE.Mesh(geometry, material);
+  // mesh.rotateX(1.575)
+  scene.add(mesh);
+
+  // 点光源
+  const point = new THREE.PointLight('#ffc1c1', 2, 0, 1);
+  point.position.set(50, 60, 200); // 点光源位置
+  scene.add(point); // 点光源添加到场景中
+
+  // 环境光
+  const ambient = new THREE.AmbientLight('#8a8a8a');
+  scene.add(ambient);
+
+  // 添加摄像头
+  const camera = new THREE.OrthographicCamera(-s * k, s * k, s * l, -s * l, -s * l, s * l);
+  camera.position.set(100, 100, 100); // 设置相机位置
+  camera.rotateX(320)
+  camera.lookAt(scene.position); // 设置相机方向(指向的场景对象)
+
+  let renderer = new THREE.WebGLRenderer({
+    antialias: true, // 抗锯齿
+  });
+  renderer.setSize(width, height);
+  renderer.setClearColor('#96bbff', 1); // 设置背景颜色
+  document.body.appendChild(renderer.domElement);
+
+  function render() {
+    renderer.render(scene, camera);
+    requestAnimationFrame(render)
+  }
+
+  // 渲染
+  render();
+  // 鼠标控制
+  new THREE.OrbitControls(camera, renderer.domElement);
+  // 辅助坐标系
+  const axes = new THREE.AxesHelper(600);
+  scene.add(axes)
+
+  // onresize 事件会在窗口被调整大小时发生
+  window.onresize = function () {
+    // 重置渲染器输出画布canvas尺寸
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    // 重置相机投影的相关参数
+    k = window.innerWidth / window.innerHeight;//窗口宽高比
+    camera.left = -s * k;
+    camera.right = s * k;
+    camera.top = s * l;
+    camera.bottom = -s * l;
+    // 渲染器执行render方法的时候会读取相机对象的投影矩阵属性projectionMatrix
+    // 但是不会每渲染一帧，就通过相机的属性计算投影矩阵(节约计算资源)
+    // 如果相机的一些属性发生了变化，需要执行updateProjectionMatrix ()方法更新相机的投影矩阵
+    camera.updateProjectionMatrix();
+  };
+</script>
+</html>
